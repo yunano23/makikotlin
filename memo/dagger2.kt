@@ -13,8 +13,7 @@ https://qiita.com/ko2ic/items/35d077499734bfd777fc
 ・inject される側（Activity）は、Component を経由して必要なインスタンを注入してもらう
 ・@Component つけて、abstractクラス、 interface で定義
 ・modules 属性に必要な Moduleクラスを指定
-・インターフェース型の変数に、インジェクトをしたい場合
-Moduleを切替えることで、生成するインスタンスを指定できる
+・インターフェース型の変数に、インジェクトする場合、Moduleで、生成するインスタンスを指定して切替できる
 ・ビルドすると Component の実装クラスが自動生成される。名前は「 Dagger + Componentクラス名」
 
 1.@Component の抽象クラスを定義
@@ -36,8 +35,10 @@ val appComponent = DaggerAppComponent.builder()
 
 AndroidInjection（2.11から）-------------------------------------------------
 ・指定したActivityに、@Componentを自動生成するModuleが作れるようになった
-・@ContributesAndroidInjector で、インジェクションして欲しいActivityを指定した@Moduleを作成し
-　＠Componentにセットしておけば、そのActivityで、@Componentのインスタンスを裏で自動生成してくれる
+    1.@ContributesAndroidInjector で、インジェクションして欲しいActivityを指定した@Moduleを作成
+    2.＠Componentにセットしておく
+    3.Axtivityでは、AndroidInjection.inject(this)するだけ
+        そのActivityで、@Componentのインスタンスを裏で自動生成してくれる
 
 // 1.指定したActivityにComponentを自動生成するModule作成
 @Module
@@ -63,21 +64,20 @@ AndroidInjection.inject(this)
 AndroidInjection.inject(this) が具体的に何をしているかというと、
 Applicationクラスで、HasActivityInjectorが実装されていれば、
 DispatchingAndroidInjector を使って引数のActivityを
-Component(これは依存を解決するためのクラス。別名ObjectGraph。)に入れています。
-そして、Activityで @InjectをつけたフィールドにInjectしてくれます
+Component(これは依存を解決するためのクラス。別名ObjectGraph。)に入れ
+Activityで @InjectをつけたフィールドにInjectしてくれます
 
 
 ----------------------------------------------------------------------------------
 [@Module]
 ・責務はインスタンスの生成
-・inject するクラスを返すメソッドを定義（@Provideメソッド）
+・@Provideメソッドを定義（inject するクラスを返すメソッド）
 [@Provides]
-・@Providesをつける
 ・名前は「Provide + 生成するクラス名」
 ・戻り値に生成したいクラスを指定
 [@Binds]
-・@Providesの代わりに@Bindsを利用
-・クラスとプロバイダメソッドをabstractにすること
+・@Providesの代わりに利用
+・class と @Provideメソッド は abstract にすること
 
 @Module
 class AppModule(val application: Application) {
@@ -90,9 +90,9 @@ class AppModule(val application: Application) {
 }
 
 
-・裏でFactory が自動生成される。
-・名前は「@Moduleクラス名 _ @Provideメソッド名 + Factory」
-・Component は、Factory を介して Module の provideメソッド を呼出し、インスタンスを生成している
+・裏でFactory が自動生成される
+    ・名前は「@Moduleクラス名 _ @Provideメソッド名 + Factory」
+    ・Component は、Factory を介して Module の provideメソッド を呼出し、インスタンスを生成している
 
 
 
@@ -147,10 +147,11 @@ AndroidInjector のバインディンググラフで使用されるインスタ�
 Androidタイプ（Activity、Fragmentなど）のインスタンスに、メンバーインジェクションを実行
 ----------------------------------------------------------------------------------
 [HasAndroidInjectorインターフェース]
-AndroidInjector を返す #androidInjector()が定義されている
+AndroidInjector を返す #androidInjector() をもつ
     fun androidInjector():AndroidInjector<Object>
 
-インターフェースは、それぞれAndroidタイプのInjectorを返すメソッドが定義されている
+[HasAndroidInjectorインターフェース のサブクラス]
+それぞれAndroidタイプのInjectorを返すメソッドが定義されている
     HasActivityInjector.activityInjector():DispatchingAndroidInjector<Activity>
     HasFragmentInjector.fragmentInjector():DispatchingAndroidInjector<Fragment>
 ----------------------------------------------------------------------------------
